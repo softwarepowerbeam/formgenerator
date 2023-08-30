@@ -93,7 +93,7 @@ export default class Formgenerator {
         this.form.find(":input:not([type=button])").prop("disabled", true);
 
         this.eventTarget.dispatchEvent(afterSubmitEvent);
-        
+
         enabled.prop("disabled", false);
 
         return false;
@@ -190,8 +190,13 @@ class PowerbeamField {
             size: this.params.min,
             maxlength: this.params.maxlength,
             minlength: this.params.minlength,
-            pattern: (this.params.pattern) ? (new RegExp(this.params.pattern, 'g')) : undefined
+            pattern: (this.params.pattern) ? (new RegExp(this.params.pattern, 'g')) : undefined,
         })
+
+        if(this.params.units){
+            element.attr("data-units",this.params.units);
+            element.addClass('powerbeamform-units');
+        }
 
         if (this.params.required) {
             element.addClass('powerbeamform-required');
@@ -250,7 +255,9 @@ class PowerbeamField {
             this.input.removeClass('powerbeamform-valid');
             this.input[0].setCustomValidity("Mismatch");
         }
-        this.input[0].reportValidity();
+        setTimeout(() => {
+            this.input[0].reportValidity();
+        }, 100);
     }
 
     setValue(value) {
