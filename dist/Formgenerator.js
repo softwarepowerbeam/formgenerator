@@ -82,11 +82,20 @@ export default class Formgenerator {
         const afterSubmitEvent = new Event('afterSubmit');
         afterSubmitEvent.data = data;
 
+
+        const enabled = this.form.find(":input:enabled:not([type=button])");
+        enabled.prop("disabled", true);
+
         if (this.config.target) {
             afterSubmitEvent.response = await this.ajaxRequest(this.config.target.method, this.targetPath + this.config.target.url, data)
         }
 
+        this.form.find(":input:not([type=button])").prop("disabled", true);
+
         this.eventTarget.dispatchEvent(afterSubmitEvent);
+        
+        enabled.prop("disabled", false);
+
         return false;
     }
     /**
@@ -195,7 +204,7 @@ class PowerbeamField {
 
         if (this.params.confirm) {
             element.addClass('powerbeamform-validate');
-            element.on('change', this.confirm.bind(this));
+            element.on('change focusout', this.confirm.bind(this));
         }
 
         if (this.params.attributes) {
