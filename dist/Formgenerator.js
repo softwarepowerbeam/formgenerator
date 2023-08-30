@@ -196,6 +196,8 @@ class PowerbeamField {
         if(this.params.units){
             element.attr("data-units",this.params.units);
             element.addClass('powerbeamform-units');
+            const span = $('<span>').addClass('powerbeamform-units-span').html(this.params.units);
+            this.div.append(span);
         }
 
         if (this.params.required) {
