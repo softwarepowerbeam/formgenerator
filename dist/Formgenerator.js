@@ -59,14 +59,16 @@ export default class Formgenerator {
         return data;
     }
 
-    countValues(){
+    countValues() {
         const data = this.getData();
+        let fill = 0;
         for (const name of Object.keys(data)) {
-            const value = data[key];
+            const value = data[name];
             if (value.length > 0 || this.fields[name].params.type === 'file' || this.fields[name].params.type === 'checkbox') {
                 fill++;
             }
-        }  
+        }
+        return fill;
     }
 
     reset() {
@@ -75,6 +77,10 @@ export default class Formgenerator {
 
     setData(data) {
         for (const name of Object.keys(data)) {
+            if (!this.fields[name]) {
+                console.error('There is not ' + name + ' in fields', Object.keys(this.fields));
+                continue;
+            }
             this.fields[name].setValue(data[name]);
         }
     }
