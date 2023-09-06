@@ -59,6 +59,16 @@ export default class Formgenerator {
         return data;
     }
 
+    countValues(){
+        const data = this.getData();
+        for (const name of Object.keys(data)) {
+            const value = data[key];
+            if (value.length > 0 || this.fields[name].params.type === 'file' || this.fields[name].params.type === 'checkbox') {
+                fill++;
+            }
+        }  
+    }
+
     reset() {
         this.form[0].reset();
     }
@@ -193,8 +203,8 @@ class PowerbeamField {
             pattern: (this.params.pattern) ? (new RegExp(this.params.pattern, 'g')) : undefined,
         })
 
-        if(this.params.units){
-            element.attr("data-units",this.params.units);
+        if (this.params.units) {
+            element.attr("data-units", this.params.units);
             element.addClass('powerbeamform-units');
             const span = $('<span>').addClass('powerbeamform-units-span').html(this.params.units);
             this.div.append(span);
@@ -263,7 +273,30 @@ class PowerbeamField {
     }
 
     setValue(value) {
-        this.input.val(value);
+        switch (this.params.type) {
+            case 'checkbox':
+                if (value === "1") {
+                    this.input.prop('checked', true);
+                } else {
+                    this.input.prop('checked', false);
+                }
+                break;
+            case 'radio':
+                for (const input of this.input) {
+                    if (input.attr('value') === value) {
+                        input.prop('checked', true);
+                    }
+                }
+
+                break;
+            case 'file':
+
+                break;
+            default:
+                this.input.val(value);
+                break;
+        }
+
     }
 
     inputGenerator() {
@@ -285,6 +318,7 @@ class PowerbeamField {
         this.input = $('<input>', {
             id: `${this.prefix}-input-${this.params.name}`,
             type: 'checkbox',
+            value: '1'
         }).addClass(`powerbeamform-input  ${this.prefix}-input form-check-input`).appendTo(this.div);
 
         this.assignStandardAttributes(this.input);
