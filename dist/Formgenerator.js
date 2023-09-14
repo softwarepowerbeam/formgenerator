@@ -187,6 +187,7 @@ class PowerbeamField {
 
         if (this.params.type === 'textarea') return this.textAreaGenerator();
 
+        return this.customGenerator();
     }
 
     appendTo(parent) {
@@ -210,10 +211,13 @@ class PowerbeamField {
         })
 
         if (this.params.units) {
+            const subdiv = $('<div>').addClass('powerbeamform-input-units-group');
+            element.after(subdiv);
+            subdiv.append(element);
             element.attr("data-units", this.params.units);
             element.addClass('powerbeamform-units');
             const span = $('<span>').addClass('powerbeamform-units-span').html(this.params.units);
-            this.div.append(span);
+            subdiv.append(span);
         }
 
         if (this.params.required) {
@@ -405,5 +409,9 @@ class PowerbeamField {
         return this;
     }
 
+    customGenerator() {
+        this.form.config.custom[this.params.type].call(this);
+        return this;
+    }
 
 }
