@@ -140,7 +140,7 @@ export class InputField extends FormField {
             type: this.params.type
         }).addClass(`powerbeamform-input ${this.prefix}-input form-control`).appendTo(this.div);
         this.assignStandardAttributes(this.input);
-        this.input.on('change', _onchange.bind(this));
+        this.input.on('change', this._onchange.bind(this));
         return this;
     }
 
@@ -179,6 +179,7 @@ export class CheckboxField extends FormField {
         if (this.params.required) {
             this.label.addClass('powerbeamform-label-required');
         }
+        this.input.on('change', this._onchange.bind(this));
         return this;
     }
 
@@ -218,7 +219,7 @@ export class RadioField extends FormField {
                 title: optionParams.title,
                 required: this.params.required
             }).addClass(`powerbeamform-input  ${this.prefix}-input form-check-input`).appendTo(option.div);
-
+            option.input.on('change', this._onchange.bind(this));
             option.label = $('<label>', { for: `${this.prefix}-input-${this.params.name}-${optionParams.value}`, html: optionParams.label })
                 .addClass(`powerbeamform-label  ${this.prefix}-label form-check-label`).appendTo(option.div);
 
@@ -265,6 +266,7 @@ export class SelectField extends FormField {
         if (this.params.attributes) {
             this.input.attr(this.params.attributes);
         }
+        this.input.on('change', this._onchange.bind(this));
         return this;
     }
 
@@ -300,6 +302,7 @@ export class TextareaField extends FormField {
         if (this.params.attributes) {
             this.input.attr(this.params.attributes);
         }
+        this.input.on('change', this._onchange.bind(this));
         return this;
     }
 
@@ -328,6 +331,7 @@ export class HiddenField extends FormField {
             type: 'hidden'
         }).addClass(`powerbeamform-input ${this.prefix}-input form-control`).appendTo(this.div);
         this.assignStandardAttributes(this.input);
+        this.input.on('change', this._onchange.bind(this));
         return this;
     }
     setValue(value) {
