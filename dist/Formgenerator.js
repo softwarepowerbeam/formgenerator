@@ -15,6 +15,13 @@ export default class Formgenerator {
         this.validators = [];
         this.fieldClasses = {};
         this.assignDefaultClasses();
+        
+    }
+    /**
+     * 
+     * @param {JQuery} parent 
+     */
+    generate(parent) {
         for (const fieldsetParams of this.config.fieldsets) {
             const fieldSet = {
                 label: fieldsetParams.label,
@@ -27,12 +34,7 @@ export default class Formgenerator {
             this.fieldsets.push(fieldSet);
         }
         this.targetPath = config.targetPath || '';
-    }
-    /**
-     * 
-     * @param {JQuery} parent 
-     */
-    generate(parent) {
+
         this.form = $('<form>', { id: this.prefix }).addClass(`powerbeamform ${this.prefix}`).appendTo(parent);
         this.form.on('submit', this._onsubmit.bind(this));
 
