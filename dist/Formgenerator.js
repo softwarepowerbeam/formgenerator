@@ -14,7 +14,7 @@ export default class Formgenerator {
         this.eventTarget = new EventTarget();
         this.validators = [];
         this.fieldClasses = {};
-
+        this.assignDefaultClasses();
         for (const fieldsetParams of this.config.fieldsets) {
             const fieldSet = {
                 label: fieldsetParams.label,
