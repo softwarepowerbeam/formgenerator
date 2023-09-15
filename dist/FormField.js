@@ -206,6 +206,15 @@ export class RadioField extends FormField {
         this.fieldset = $('<fieldset>', { html: `<legend>${this.params.label}</legend>` }).appendTo(this.div);
         this.options = [];
         this.input = [];
+        this.fillOptions();
+        return this;
+    }
+    fillOptions() {
+        for (const option of this.options) {
+            option.div.remove();
+        }
+        this.options = [];
+        this.input = [];
         for (const optionParams of this.params.options) {
 
             const option = { value: optionParams.value };
@@ -226,7 +235,6 @@ export class RadioField extends FormField {
             this.options.push(option);
             this.input.push(option.input);
         }
-        return this;
     }
     setValue(value) {
         for (const input of this.input) {
