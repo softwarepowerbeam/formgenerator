@@ -261,7 +261,7 @@ export class SelectField extends FormField {
     generate() {
         super.generate();
         this.label = $('<label>', { for: `${this.prefix}-input-${this.params.name}`, html: this.params.label })
-        .addClass(`powerbeamform-label  ${this.prefix}-label form-label`).appendTo(this.div);
+            .addClass(`powerbeamform-label  ${this.prefix}-label form-label`).appendTo(this.div);
         this.input = $('<select>', { required: this.params.required, name: this.params.name, id: `${this.prefix}-input-${this.params.name}` }).addClass('form-select').appendTo(this.div);
         this.options = [];
         for (const optionParams of this.params.options) {
@@ -339,7 +339,7 @@ export class HiddenField extends FormField {
         this.input = $('<input>', {
             id: `${this.prefix}-input-${this.params.name}`,
             type: 'hidden'
-        }).addClass(`powerbeamform-input ${this.prefix}-input form-control`).appendTo(this.div);
+        }).addClass(`powerbeamform-input ${this.prefix}-input form-control`);
         this.assignStandardAttributes(this.input);
         this.input.on('change', this._onchange.bind(this));
         return this;
