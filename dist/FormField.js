@@ -260,7 +260,9 @@ export class SelectField extends FormField {
 
     generate() {
         super.generate();
-        this.input = $('<select>', { required: this.params.required }).addClass('form-select').appendTo(this.div);
+        this.label = $('<label>', { for: `${this.prefix}-input-${this.params.name}`, html: this.params.label })
+        .addClass(`powerbeamform-label  ${this.prefix}-label form-label`).appendTo(this.div);
+        this.input = $('<select>', { required: this.params.required, name: this.params.name, id: `${this.prefix}-input-${this.params.name}` }).addClass('form-select').appendTo(this.div);
         this.options = [];
         for (const optionParams of this.params.options) {
             const option = $('<option>', {
