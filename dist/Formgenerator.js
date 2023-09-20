@@ -87,7 +87,7 @@ export default class Formgenerator {
     setData(data) {
         for (const name of Object.keys(data)) {
             if (!this.fields[name]) {
-                console.error('There is not ' + name + ' in fields', Object.keys(this.fields));
+                console.warn('There is not ' + name + ' in fields', Object.keys(this.fields));
                 continue;
             }
             this.fields[name].setValue(data[name]);
@@ -174,7 +174,6 @@ export default class Formgenerator {
             "week",
             "time",
             "color",
-            "file",
             "range",
             "search"
         ];
@@ -187,6 +186,9 @@ export default class Formgenerator {
         this.assignFieldType('radio', FormField.RadioField);
         this.assignFieldType('select', FormField.SelectField);
         this.assignFieldType('textarea', FormField.TextareaField);
+        this.assignFieldType('hidden', FormField.HiddenField);
+        this.assignFieldType('file', FormField.FileField);
+        
     }
 }
 

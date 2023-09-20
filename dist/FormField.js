@@ -10,6 +10,7 @@ export class FormField {
         this.params = fieldParams;
         this.prefix = this.form.prefix;
         this.eventTarget = new EventTarget();
+        this.required = this.params.required;
     }
     generate() {
         this.div = $('<div>', { id: `${this.prefix}-div-${this.params.name}` }).addClass(`powerbeamform-div ${this.prefix}-div`);
@@ -23,7 +24,6 @@ export class FormField {
     assignStandardAttributes(element) {
         element.attr({
             name: this.params.name,
-            required: this.params.required,
             placeholder: this.params.placeholder,
             title: this.params.title,
             step: this.params.step,
@@ -34,6 +34,10 @@ export class FormField {
             minlength: this.params.minlength,
             pattern: (this.params.pattern) ? (new RegExp(this.params.pattern, 'g')) : undefined,
         })
+
+        if (this.form.config.forceRequired) {
+            element.attr('required', this.params.required);
+        }
 
         if (this.params.units) {
             const subdiv = $('<div>').addClass('powerbeamform-input-units-group');
@@ -351,4 +355,75 @@ export class HiddenField extends FormField {
     getValue() {
         return this.input.val();
     }
+}
+
+export class FileField extends FormField {
+    constructor(formgenerator, fieldParams) {
+        super(formgenerator, fieldParams);
+    }
+    generate() {
+        super.generate();
+        this.label = $('<label>', { for: `${this.prefix}-input-${this.params.name}`, html: this.params.label })
+            .addClass(`powerbeamform-label  ${this.prefix}-label form-label`).appendTo(this.div);
+        if (this.params.required) {
+            this.label.addClass('powerbeamform-label-required');
+        }
+        this.input = $('<input>', {
+            id: `${this.prefix}-input-${this.params.name}`,
+            type: this.params.type
+        }).addClass(`powerbeamform-input ${this.prefix}-input form-control`).appendTo(this.div);
+        this.assignStandardAttributes(this.input);
+        this.input.on('change', this._onchange.bind(this));
+        return this;
+    }
+
+    setValue() {
+        console.warn('Cannot set a value for a file input');
+    }
+
+    getValue() {
+        return this.input.files;
+    }
+
+
+    readAllFiles(readAs = 'text') {
+        if (this.input.files.length < 1) return [];
+        const filePromises = [];
+        for (const file of this.input.files) {
+            const promise = this.readFile(file, readAs);
+            filePromises.push(promise);
+        }
+        return Promise.all(filePromises);
+    }
+
+    readFile(n = 0, readAs = 'text') {
+        const file = this.input.files[n];
+
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                resolve(event.target.result);
+            };
+            reader.onerror = () => {
+                reject();
+            }
+            switch (readAs) {
+                case 'arrayBuffer':
+                    reader.readAsArrayBuffer(file);
+                    break;
+                case 'binaryString':
+                    reader.readAsBinaryString(file);
+                    break;
+                case 'dataURL':
+                    reader.readAsDataURL(file);
+                    break;
+                case 'text':
+                    reader.readAsText(file);
+                    break;
+            }
+        });
+
+    }
+
+
 }
