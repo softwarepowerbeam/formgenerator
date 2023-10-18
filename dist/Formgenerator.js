@@ -131,6 +131,12 @@ export default class Formgenerator {
             }
             this.fields[name].setValue(data[name]);
         }
+        for (const name of Object.keys(data)) {
+            if (!this.fields[name]) {
+                continue;
+            }
+            this.fields[name].isEnabled();
+        }
     }
 
     async _onsubmit(e) {
