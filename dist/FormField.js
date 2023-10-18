@@ -379,7 +379,7 @@ export class LabelField extends FormField {
     generate() {
         this.label = $('<label>', {
             id: `${this.prefix}-input-${this.params.name}`,
-        }).addClass(`powerbeamform-label ${this.prefix}-label form-control`);
+        }).addClass(`powerbeamform-label ${this.prefix}-label form-control`).html(this.params.label);
         return this;
     }
     setValue(value) {
