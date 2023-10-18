@@ -11,7 +11,43 @@ export class FormField {
         this.prefix = this.form.prefix;
         this.eventTarget = new EventTarget();
         this.required = this.params.required;
+        if (this.depends) {
+            this.form.onFieldChange(this.depends.field, this.isEnabled.bind(this));
+        }
     }
+
+    get depends() {
+        if (!this.params.depends) return false;
+        const regex = /^([^()]+)(?:\(([^)]+)\))?$/;
+        const match = this.params.depends.match(regex);
+        if (match) {
+            const field = match[1];
+            const value = match[2];
+
+            return {
+                field,
+                value,
+            };
+        } else {
+            return null;
+        }
+    }
+
+    isEnabled() {
+        if (!this.depends) return true;
+        const value = editor.instanceForm.fields[this.depends.field].getValue();
+        if (!value) {
+            if (this.div) this.div.hide();
+            return false;
+        }
+        if (this.depends.value && this.depends.value !== value) {
+            if (this.div) this.div.hide();
+            return false;
+        }
+        if (this.div) this.div.show();
+        return true;
+    }
+
     generate() {
         this.div = $('<div>', { id: `${this.prefix}-div-${this.params.name}` }).addClass(`powerbeamform-div ${this.prefix}-div`);
     }
@@ -326,6 +362,31 @@ export class TextareaField extends FormField {
 
     getValue() {
         return this.input.val();
+    }
+}
+
+export class LabelField extends FormField {
+    constructor(formgenerator, fieldParams) {
+        super(formgenerator, fieldParams);
+    }
+
+    appendTo(parent) {
+        this.label.appendTo(parent);
+        return this;
+    }
+
+    generate() {
+        this.label = $('<label>', {
+            id: `${this.prefix}-input-${this.params.name}`,
+        }).addClass(`powerbeamform-label ${this.prefix}-label form-control`);
+        return this;
+    }
+    setValue(value) {
+        this.label.html(value);
+    }
+
+    getValue() {
+        return this.label.html();
     }
 }
 

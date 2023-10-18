@@ -59,17 +59,56 @@ export default class Formgenerator {
     }
 
 
-    getData() {
+    async getData() {
         const formdata = new FormData(this.form[0]);
         const data = {};
+
+        const fileReaders = [];
+
         for (const pair of formdata.entries()) {
-            data[pair[0]] = pair[1];
+            const [key, value] = pair;
+
+            if (value instanceof File) {
+                const reader = new FileReader();
+                fileReaders.push(
+                    new Promise((resolve) => {
+                        reader.onload = function () {
+                            resolve({ key, value: reader.result });
+                        };
+                    })
+                );
+                reader.readAsDataURL(value);
+            } else {
+                if (data[key] === undefined) {
+                    data[key] = value;
+                } else {
+                    if (!Array.isArray(data[key])) {
+                        data[key] = [data[key]];
+                    }
+                    data[key].push(value);
+                }
+            }
         }
+        const fileResults = await Promise.all(fileReaders);
+
+        for (const { key, value } of fileResults) {
+            if (data[key] === undefined) {
+                data[key] = value;
+            } else {
+                if (!Array.isArray(data[key])) {
+                    data[key] = [data[key]];
+                }
+                data[key].push(value);
+            }
+        }
+
         return data;
     }
 
-    countValues() {
-        const data = this.getData();
+
+
+    async countValues() {
+        const data = await this.getData();
         let fill = 0;
         for (const name of Object.keys(data)) {
             const value = data[name];
@@ -96,7 +135,7 @@ export default class Formgenerator {
 
     async _onsubmit(e) {
         e.preventDefault();
-        const data = this.getData();
+        const data = await this.getData();
 
         const beforeSubmitEvent = new Event('beforeSubmit');
         beforeSubmitEvent.data = data;
@@ -188,7 +227,7 @@ export default class Formgenerator {
         this.assignFieldType('textarea', FormField.TextareaField);
         this.assignFieldType('hidden', FormField.HiddenField);
         this.assignFieldType('file', FormField.FileField);
-        
+
     }
 }
 
