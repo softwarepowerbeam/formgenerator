@@ -131,7 +131,7 @@ export default class Formgenerator {
             }
             this.fields[name].setValue(data[name]);
         }
-        for (const name of Object.keys(data)) {
+        for (const name of Object.keys(this.fields)) {
             if (!this.fields[name]) {
                 continue;
             }
@@ -232,6 +232,7 @@ export default class Formgenerator {
         this.assignFieldType('select', FormField.SelectField);
         this.assignFieldType('textarea', FormField.TextareaField);
         this.assignFieldType('hidden', FormField.HiddenField);
+        this.assignFieldType('label', FormField.LabelField);
         this.assignFieldType('file', FormField.FileField);
 
     }
