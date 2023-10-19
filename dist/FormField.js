@@ -180,6 +180,11 @@ export class InputField extends FormField {
             id: `${this.prefix}-input-${this.params.name}`,
             type: this.params.type
         }).addClass(`powerbeamform-input ${this.prefix}-input form-control`).appendTo(this.div);
+
+        if (this.params.values) {
+            this.input.val(this.params.values);
+        }
+
         this.assignStandardAttributes(this.input);
         this.input.on('change', this._onchange.bind(this));
         return this;
@@ -213,6 +218,10 @@ export class CheckboxField extends FormField {
         this.assignStandardAttributes(this.input);
         if (this.params.attributes) {
             this.input.attr(this.params.attributes);
+        }
+
+        if (this.params.values) {
+            this.input.prop('checked', true);
         }
 
         this.label = $('<label>', { for: `${this.prefix}-input-${this.params.name}`, html: this.params.label })
@@ -269,6 +278,9 @@ export class RadioField extends FormField {
                 title: optionParams.title,
                 required: this.params.required
             }).addClass(`powerbeamform-input  ${this.prefix}-input form-check-input`).appendTo(option.div);
+            if (optionParams.default) {
+                option.input.prop('checked', true);
+            }
             option.input.on('change', this._onchange.bind(this));
             option.label = $('<label>', { for: `${this.prefix}-input-${this.params.name}-${optionParams.value}`, html: optionParams.label })
                 .addClass(`powerbeamform-label  ${this.prefix}-label form-check-label`).appendTo(option.div);
@@ -312,6 +324,9 @@ export class SelectField extends FormField {
                 value: optionParams.value,
                 html: optionParams.label,
             }).addClass(`powerbeamform-input  ${this.prefix}-input form-check-input`).appendTo(this.input);
+            if (optionParams.default) {
+                option.prop('selected', true);
+            }
             this.options.push(option);
         }
         if (this.params.attributes) {
@@ -371,15 +386,11 @@ export class LabelField extends FormField {
         super(formgenerator, fieldParams);
     }
 
-    appendTo(parent) {
-        this.label.appendTo(parent);
-        return this;
-    }
-
     generate() {
+        super.generate();
         this.label = $('<label>', {
             id: `${this.prefix}-input-${this.params.name}`,
-        }).addClass(`powerbeamform-label ${this.prefix}-label form-control`).html(this.params.label);
+        }).addClass(`powerbeamform-label ${this.prefix}-label`).html(this.params.label).appendTo(this.div);
         return this;
     }
     setValue(value) {
