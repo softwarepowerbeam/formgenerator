@@ -40,6 +40,10 @@ export class FormField {
             if (this.div) this.div.hide();
             return false;
         }
+        if (!isNaN(value) && !Number(value)) { // if is zero
+            if (this.div) this.div.hide();
+            return false;
+        }
         if (this.depends.value && this.depends.value !== value) {
             if (this.div) this.div.hide();
             return false;

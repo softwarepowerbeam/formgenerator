@@ -22,7 +22,7 @@ The `Formgenerator` class can be used in your web application by importing it. Y
 To use the `Formgenerator` class, create an instance of it by passing in a configuration object and a prefix for your form. The configuration object defines the form's structure, fields, validation, and submission settings.
 
 ```js
-import Formgenerator from "https://cdn.jsdelivr.net/gh/softwarepowerbeam/formgenerator@1.1.13/dist/Formgenerator.js";
+import Formgenerator from "https://cdn.jsdelivr.net/gh/softwarepowerbeam/formgenerator@1.1.14/dist/Formgenerator.js";
 
 const formParams = {
    // Configuration settings...
