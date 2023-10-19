@@ -53,7 +53,7 @@ export class FormField {
     }
 
     generate() {
-        this.div = $('<div>', { id: `${this.prefix}-div-${this.params.name}` }).addClass(`powerbeamform-div ${this.prefix}-div`);
+        this.div = $('<div>', { id: `${this.prefix}-div-${this.params.name}` }).addClass(`powerbeamform-div ${this.prefix}-div ${this.params.type}-div}`);
         this.isEnabled();
     }
 
