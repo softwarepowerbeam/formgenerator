@@ -273,6 +273,7 @@ export class NumberField extends FormField {
             this.units = unit;
             e.preventDefault();
             e.stopPropagation();
+            this._onchange();
         }
         if (e.key == 'ArrowUp' || e.key == 'ArrowDown') {
             this.onarrow(e);
