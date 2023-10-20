@@ -220,13 +220,14 @@ export class NumberField extends FormField {
             this.numberInput.select();
         });
 
+        this.numberInput.attr("data-units", this.params.units);
+        this.numberInput.addClass('powerbeamform-units');
+        this.numberInput.on('change', this.onvaluechange.bind(this));
+        this.numberInput.on('keydown', this.onkeydown.bind(this));
+
         if (this.params.units) {
             const subdiv = $('<div>').addClass('powerbeamform-input-units-group').appendTo(this.div);
             this.numberInput.appendTo(subdiv);
-            this.numberInput.attr("data-units", this.params.units);
-            this.numberInput.addClass('powerbeamform-units');
-            this.numberInput.on('change', this.onvaluechange.bind(this));
-            this.numberInput.on('keydown', this.onkeydown.bind(this));
             this.availableUnits = this.params.units.split(',');
             if (this.availableUnits.length > 1) {
                 this.unitOptions = {};
