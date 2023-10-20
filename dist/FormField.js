@@ -322,10 +322,10 @@ export class NumberField extends FormField {
             }
         }
 
-        if (target < this.params.min) {
+        if (this.params.min && target < this.params.min) {
             target = this.params.min;
         }
-        if (target > this.params.max) {
+        if (this.params.max && target > this.params.max) {
             target = this.params.max;
         }
 
