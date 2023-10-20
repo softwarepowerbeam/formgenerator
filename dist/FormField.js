@@ -334,6 +334,7 @@ export class NumberField extends FormField {
         }
 
         this.numVal = target;
+        this._onchange();
     }
 
     onvaluechange() {
