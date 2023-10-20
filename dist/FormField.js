@@ -329,7 +329,7 @@ export class NumberField extends FormField {
             target = this.params.max;
         }
 
-        if(step){
+        if (step && step.toString().split('.').length > 1) {
             target = target.toFixed(step.toString().split('.')[1].length);
         }
 
