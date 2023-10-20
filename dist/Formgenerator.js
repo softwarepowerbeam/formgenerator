@@ -210,7 +210,6 @@ export default class Formgenerator {
             "text",
             "password",
             "email",
-            "number",
             "url",
             "tel",
             "date",
@@ -234,6 +233,7 @@ export default class Formgenerator {
         this.assignFieldType('hidden', FormField.HiddenField);
         this.assignFieldType('label', FormField.LabelField);
         this.assignFieldType('file', FormField.FileField);
+        this.assignFieldType('number', FormField.NumberField);
 
     }
 }

@@ -67,10 +67,7 @@ export class FormField {
             name: this.params.name,
             placeholder: this.params.placeholder,
             title: this.params.title,
-            step: this.params.step,
-            min: this.params.min,
-            max: this.params.max,
-            size: this.params.min,
+            size: this.params.size,
             maxlength: this.params.maxlength,
             minlength: this.params.minlength,
             pattern: (this.params.pattern) ? (new RegExp(this.params.pattern, 'g')) : undefined,
@@ -78,16 +75,6 @@ export class FormField {
 
         if (this.form.config.forceRequired) {
             element.attr('required', this.params.required);
-        }
-
-        if (this.params.units) {
-            const subdiv = $('<div>').addClass('powerbeamform-input-units-group');
-            element.after(subdiv);
-            subdiv.append(element);
-            element.attr("data-units", this.params.units);
-            element.addClass('powerbeamform-units');
-            const span = $('<span>').addClass('powerbeamform-units-span').html(this.params.units);
-            subdiv.append(span);
         }
 
         if (this.params.required) {
@@ -201,8 +188,198 @@ export class InputField extends FormField {
     getValue() {
         return this.input.val();
     }
+}
+
+export class NumberField extends FormField {
+    constructor(formgenerator, fieldParams) {
+        super(formgenerator, fieldParams);
+        this.availableUnits = [];
+        this.unitOptions = {};
+    }
+    generate() {
+        super.generate();
+        this.label = $('<label>', { for: `${this.prefix}-input-${this.params.name}`, html: this.params.label })
+            .addClass(`powerbeamform-label  ${this.prefix}-label form-label`).appendTo(this.div);
+        if (this.params.required) {
+            this.label.addClass('powerbeamform-label-required');
+        }
+        this.input = $('<input>', {
+            id: `${this.prefix}-input-${this.params.name}`,
+            type: 'hidden'
+        }).appendTo(this.div);
+        this.assignStandardAttributes(this.input);
+
+        this.numberInput = $('<input>', {
+            id: `${this.prefix}-input-${this.params.name}`,
+            type: 'number',
+            step: this.params.step,
+            min: this.params.min,
+            max: this.params.max,
+        }).addClass(`powerbeamform-input ${this.prefix}-input form-control`);
+        this.numberInput.on('click', () => {
+            this.numberInput.select();
+        });
+
+        if (this.params.units) {
+            const subdiv = $('<div>').addClass('powerbeamform-input-units-group').appendTo(this.div);
+            this.numberInput.appendTo(subdiv);
+            this.numberInput.attr("data-units", this.params.units);
+            this.numberInput.addClass('powerbeamform-units');
+            this.numberInput.on('change', this.onvaluechange.bind(this));
+            this.numberInput.on('keydown', this.onkeydown.bind(this));
+            this.availableUnits = this.params.units.split(',');
+            if (this.availableUnits.length > 1) {
+                this.unitOptions = {};
+                this.unitSelector = $('<select>').addClass('powerbeamform-units-selector').appendTo(subdiv);
+                for (const unit of this.availableUnits) {
+                    this.unitOptions[unit] = $('<option>', { html: unit, value: unit }).appendTo(this.unitSelector);
+                }
+                this.unitSelector.on('change', this.onvaluechange.bind(this));
+            } else {
+                const span = $('<span>').addClass('powerbeamform-units-span').html(this.params.units);
+                subdiv.append(span);
+            }
+        } else {
+            this.numberInput.appendTo(this.div);
+        }
+
+        if (this.params.values) {
+            this.setValue(this.params.values)
+        }
+
+        this.input.on('change', this._onchange.bind(this));
+        return this;
+    }
+
+    findUnit(value, caseInsensitive) {
+        const prompt = (caseInsensitive) ? value.toLowerCase() : value;
+        for (const unit of Object.keys(this.unitOptions)) {
+            if (caseInsensitive) {
+                if (unit.toLocaleLowerCase().startsWith(prompt)) return unit;
+            } else {
+                if (unit.startsWith(prompt)) return unit;
+            }
+        }
+        return false;
+    }
+
+    onkeydown(e) {
+        if (!isNaN(e.key) || e.key === '.' || e.key === ',') return;
+        let unit = this.findUnit(e.key);
+        if (!unit) {
+            unit = this.findUnit(e.key, true);
+        }
+        if (unit) {
+            this.units = unit;
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        if (e.key == 'ArrowUp' || e.key == 'ArrowDown') {
+            this.onarrow(e);
+        }
+    }
+    onarrow(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const step = this.params.step || 1;
+        let target;
+        if (e.shiftKey) {
+            if (e.key == 'ArrowUp') {
+                if (step < 1) {
+                    target = Number(this.numVal) + 10;
+                } else {
+                    target = Number(this.numVal) + 10 * step;
+                }
+            } else {
+                if (step < 1) {
+                    target = Number(this.numVal) - 10;
+                } else {
+                    target = Number(this.numVal) - 10 * step;
+                }
+            }
+        } else {
+            if (e.key == 'ArrowUp') {
+                if (step < 1) {
+                    if (e.ctrlKey || e.metaKey) {
+                        target = Number(this.numVal) + step;
+                    } else {
+                        target = Number(this.numVal) + 1
+                    }
+                } else {
+                    target = Number(this.numVal) + step;
+                }
+
+            } else {
+                if (step < 1) {
+                    if (e.ctrlKey || e.metaKey) {
+                        target = Number(this.numVal) - step;
+                    } else {
+                        target = Number(this.numVal) - 1
+                    }
+                } else {
+                    target = Number(this.numVal) - step;
+                }
+            }
+        }
+
+        if (target < this.params.min) {
+            target = this.params.min;
+        }
+        if (target > this.params.max) {
+            target = this.params.max;
+        }
+
+        if(step){
+            target = target.toFixed(step.toString().split('.')[1].length);
+        }
+
+        this.numVal = target;
+    }
+
+    onvaluechange() {
+        if (this.availableUnits.length > 1) {
+            this.input.val(`${this.numVal} ${this.units}`);
+        } else {
+            this.input.val(this.numVal);
+        }
+        this._onchange();
+    }
+
+    get numVal() {
+        return this.numberInput.val() || '0';
+    }
+
+    set numVal(value) {
+        this.numberInput.val(value);
+    }
+
+    set units(value) {
+        if (value && this.unitOptions[value]) {
+            this.unitSelector.children('option').prop('selected', false);
+            this.unitOptions[value].prop('selected', true);
+        }
+    }
+
+    get units() {
+        return this.unitSelector.val();
+    }
 
 
+    setValue(value = '') {
+        this.input.val(value);
+        if (this.availableUnits.length > 1) {
+            const pair = value.toString().split(' ');
+            console.log(pair);
+            this.numVal = pair[0];
+            this.units = pair[1];
+        } else {
+            this.numVal = value;
+        }
+    }
+
+    getValue() {
+        return this.input.val();
+    }
 }
 
 export class CheckboxField extends FormField {
