@@ -324,10 +324,10 @@ export class NumberField extends FormField {
             }
         }
 
-        if (!isNaN(this.params.min) && target < this.params.min) {
+        if (!isNaN(this.params.min) && target < this.params.min && this.params.min !== null) {
             target = this.params.min;
         }
-        if (!isNaN(this.params.max) && target > this.params.max) {
+        if (!isNaN(this.params.max) && target > this.params.max && this.params.max !== null) {
             target = this.params.max;
         }
 
