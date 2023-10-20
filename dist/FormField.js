@@ -371,7 +371,6 @@ export class NumberField extends FormField {
         this.input.val(value);
         if (this.availableUnits.length > 1) {
             const pair = value.toString().split(' ');
-            console.log(pair);
             this.numVal = pair[0];
             this.units = pair[1];
         } else {
