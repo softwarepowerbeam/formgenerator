@@ -97,6 +97,7 @@ export class FormField {
     }
 
     async validate() {
+        if(!this.changed) return;
         const value = this.input.val();
 
         this.label.addClass('powerbeamform-label-validating');
@@ -116,13 +117,16 @@ export class FormField {
             this.input.removeClass('powerbeamform-valid');
             this.input[0].setCustomValidity("Already in use");
         }
+        this.changed = false;
         this.input[0].reportValidity();
+
     }
 
 
     confirm() {
+        if(!this.changed) return;
         const value = this.input.val();
-
+        this.changed = false;
         const data = this.form.getData();
 
         if (value === data[this.params.confirm]) {
@@ -144,6 +148,7 @@ export class FormField {
     }
 
     _onchange() {
+        this.changed = true;
         const changeEvent = new Event('change');
         changeEvent.data = { field: this.params.name, value: this.getValue() };
         this.eventTarget.dispatchEvent(changeEvent);
@@ -152,6 +157,7 @@ export class FormField {
         const fieldChangeEvent = new Event(`${this.params.name}_change`);
         fieldChangeEvent.data = { field: this.params.name, value: this.getValue() };
         this.form.eventTarget.dispatchEvent(fieldChangeEvent);
+        
     }
 
 }
