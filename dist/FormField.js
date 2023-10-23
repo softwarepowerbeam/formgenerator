@@ -123,11 +123,11 @@ export class FormField {
     }
 
 
-    confirm() {
+    async confirm() {
         if(!this.changed) return;
         const value = this.input.val();
         this.changed = false;
-        const data = this.form.getData();
+        const data = await this.form.getData();
 
         if (value === data[this.params.confirm]) {
             this.label.addClass('powerbeamform-label-valid');
@@ -139,6 +139,7 @@ export class FormField {
             this.input[0].setCustomValidity("Mismatch");
         }
         setTimeout(() => {
+            
             this.input[0].reportValidity();
         }, 100);
     }
