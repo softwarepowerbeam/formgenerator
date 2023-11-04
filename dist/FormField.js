@@ -273,7 +273,7 @@ export class NumberField extends FormField {
     }
 
     onkeydown(e) {
-        if (!isNaN(e.key) || e.key === '.' || e.key === ',' || e.key.length > 1) return;
+        if (!isNaN(e.key) || e.key === '.' || e.key === ',' ) return;
         let unit = this.findUnit(e.key);
         if (!unit) {
             unit = this.findUnit(e.key, true);
