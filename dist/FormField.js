@@ -1,15 +1,18 @@
-
-export class FormField {
+/**
+ * @typedef Formgenerator
+ * @type {import('./Formgenerator.js').default}
+ */
+export class FormField extends EventTarget {
     /**
      * 
      * @param {Formgenerator} formgenerator 
      * @param {Object} fieldParams 
      */
     constructor(formgenerator, fieldParams) {
+        super();
         this.form = formgenerator;
         this.params = fieldParams;
         this.prefix = this.form.prefix;
-        this.eventTarget = new EventTarget();
         this.required = this.params.required;
         if (this.depends) {
             this.form.onFieldChange(this.depends.field, this.isEnabled.bind(this));
@@ -73,6 +76,8 @@ export class FormField {
             pattern: (this.params.pattern) ? (new RegExp(this.params.pattern, 'g')) : undefined,
         })
 
+        element.addClass(this.params.className);
+
         if (this.form.config.forceRequired) {
             element.attr('required', this.params.required);
         }
@@ -97,13 +102,13 @@ export class FormField {
     }
 
     async validate() {
-        if(!this.changed) return;
+        if (!this.changed) return;
         const value = this.input.val();
 
         this.label.addClass('powerbeamform-label-validating');
         this.input.addClass('powerbeamform-validating');
 
-        const response = await this.form.ajaxRequest('post', this.form.targetPath + this.params.validator, { value });
+        const response = await this.form.fetchRequest('post', this.form.targetPath + this.params.validator, { value });
 
         this.label.removeClass('powerbeamform-label-validating');
         this.input.removeClass('powerbeamform-validating');
@@ -121,10 +126,8 @@ export class FormField {
         this.input[0].reportValidity();
 
     }
-
-
     async confirm() {
-        if(!this.changed) return;
+        if (!this.changed) return;
         const value = this.input.val();
         this.changed = false;
         const data = await this.form.getData();
@@ -139,26 +142,24 @@ export class FormField {
             this.input[0].setCustomValidity("Mismatch");
         }
         setTimeout(() => {
-            
             this.input[0].reportValidity();
         }, 100);
     }
 
     on(eventName, callback) {
-        this.eventTarget.addEventListener(eventName, callback)
+        this.addEventListener(eventName, callback)
     }
 
     _onchange() {
         this.changed = true;
-        const changeEvent = new Event('change');
+        const changeEvent = new CustomEvent('change', { detail: { field: this.params.name, value: this.getValue() } });
         changeEvent.data = { field: this.params.name, value: this.getValue() };
-        this.eventTarget.dispatchEvent(changeEvent);
-        this.form.eventTarget.dispatchEvent(changeEvent);
+        this.dispatchEvent(changeEvent);
+        this.form.dispatchEvent(changeEvent);
 
-        const fieldChangeEvent = new Event(`${this.params.name}_change`);
+        const fieldChangeEvent = new CustomEvent(`${this.params.name}_change`, { detail: { field: this.params.name, value: this.getValue() } });
         fieldChangeEvent.data = { field: this.params.name, value: this.getValue() };
-        this.form.eventTarget.dispatchEvent(fieldChangeEvent);
-        
+        this.form.dispatchEvent(fieldChangeEvent);
     }
 
 }
@@ -223,7 +224,7 @@ export class NumberField extends FormField {
             min: this.params.min,
             max: this.params.max,
         }).addClass(`powerbeamform-input ${this.prefix}-input form-control`);
-        this.numberInput.on('click', () => {
+        this.numberInput.on('focus', () => {
             this.numberInput.select();
         });
 
@@ -238,7 +239,7 @@ export class NumberField extends FormField {
             this.availableUnits = this.params.units.split(',');
             if (this.availableUnits.length > 1) {
                 this.unitOptions = {};
-                this.unitSelector = $('<select>').addClass('powerbeamform-units-selector').appendTo(subdiv);
+                this.unitSelector = $('<select>').attr('tabindex', "-1").addClass('powerbeamform-units-selector').appendTo(subdiv);
                 for (const unit of this.availableUnits) {
                     this.unitOptions[unit] = $('<option>', { html: unit, value: unit }).appendTo(this.unitSelector);
                 }
@@ -581,6 +582,7 @@ export class LabelField extends FormField {
         this.label = $('<label>', {
             id: `${this.prefix}-input-${this.params.name}`,
         }).addClass(`powerbeamform-label ${this.prefix}-label`).html(this.params.label).appendTo(this.div);
+        this.label.addClass(this.params.className);
         return this;
     }
     setValue(value) {

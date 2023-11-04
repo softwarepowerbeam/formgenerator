@@ -1,18 +1,19 @@
 import * as FormField from './FormField.js';
 
-export default class Formgenerator {
+export default class Formgenerator extends EventTarget {
     /**
      * 
      * @param {Object} config 
      * @param {string} prefix 
      */
     constructor(config, prefix) {
+        super();
         this.config = config;
         this.prefix = `${prefix}-form`;
         this.fieldsets = [];
+        /** @type {Object.<string,FormField.FormField>} */
         this.fields = {};
-        this.eventTarget = new EventTarget();
-        this.validators = [];
+        /**  @type {Object.<string,FormField.FormField>} */
         this.fieldClasses = {};
         this.assignDefaultClasses();
         this.targetPath = config.targetPath || '';
@@ -25,6 +26,7 @@ export default class Formgenerator {
         for (const fieldsetParams of this.config.fieldsets) {
             const fieldSet = {
                 label: fieldsetParams.label,
+                className: fieldsetParams.className,
                 fields: []
             };
             for (const fieldParams of fieldsetParams.fields) {
@@ -38,7 +40,8 @@ export default class Formgenerator {
         this.form.on('submit', this._onsubmit.bind(this));
 
         for (const fieldset of this.fieldsets) {
-            const fieldsetElement = $('<fieldset>', { html: `<legend>${fieldset.label}</legend>` }).appendTo(this.form);
+            const fieldsetElement = $('<fieldset>', { html: `<legend>${fieldset.label}</legend>` }).addClass(`fieldset-${fieldset.label.replace(/ /g, '_')}`).appendTo(this.form);
+            fieldsetElement.addClass(fieldset.className);
             for (const field of fieldset.fields) {
                 field.generate().appendTo(fieldsetElement);
             }
@@ -51,13 +54,12 @@ export default class Formgenerator {
     }
 
     on(eventName, callback) {
-        this.eventTarget.addEventListener(eventName, callback)
+        this.addEventListener(eventName, callback)
     }
 
     onFieldChange(field, callback) {
-        this.eventTarget.addEventListener(`${field}_change`, callback);
+        this.addEventListener(`${field}_change`, callback);
     }
-
 
     async getData() {
         const formdata = new FormData(this.form[0]);
@@ -105,8 +107,6 @@ export default class Formgenerator {
         return data;
     }
 
-
-
     async countValues() {
         const data = await this.getData();
         let fill = 0;
@@ -143,35 +143,28 @@ export default class Formgenerator {
         e.preventDefault();
         const data = await this.getData();
 
-        const beforeSubmitEvent = new Event('beforeSubmit');
-        beforeSubmitEvent.data = data;
-
-        const continueSubmit = this.eventTarget.dispatchEvent(beforeSubmitEvent);
+        const beforeSubmitEvent = new CustomEvent('beforeSubmit', { detail: data, cancelable: true });
+        const continueSubmit = this.dispatchEvent(beforeSubmitEvent);
         if (!continueSubmit) return false; //if any previous validation fails wont submit
-
-        const afterSubmitEvent = new Event('afterSubmit');
-        afterSubmitEvent.data = data;
-
 
         const enabled = this.form.find(":input:enabled:not([type=button])");
         enabled.prop("disabled", true);
 
+        const detail = { data }
+
         if (this.config.target) {
-            afterSubmitEvent.response = await this.ajaxRequest(this.config.target.method, this.targetPath + this.config.target.url, data)
+
+            detail.response = await this.fetchRequest(this.config.target.method, this.targetPath + this.config.target.url, data)
         }
+        const afterSubmitEvent = new CustomEvent('afterSubmit', { detail });
+        afterSubmitEvent.response = detail.response;
+        afterSubmitEvent.data = detail.data;
+        this.dispatchEvent(afterSubmitEvent);
 
         this.form.find(":input:not([type=button])").prop("disabled", true);
-
-        this.eventTarget.dispatchEvent(afterSubmitEvent);
-
         enabled.prop("disabled", false);
 
         return false;
-    }
-
-    _onchange(e) {
-        const beforeSubmitEvent = new Event('beforeSubmit');
-        beforeSubmitEvent.data = data;
     }
 
     /**
@@ -181,26 +174,29 @@ export default class Formgenerator {
      * @param {Object} data 
      * @returns 
      */
-    async ajaxRequest(method, url, data) {
-        const response = await new Promise(resolve => {
-            $.ajax(url, {
-                data: JSON.stringify(data),
+    async fetchRequest(method, url, data) {
+        try {
+            const response = await fetch(url, {
                 method,
-                dataType: "json",
-                contentType: "application/json",
-            }).done((data, textStatus) => {
-                resolve({ data, textStatus });
-            }).fail((jqXHR, textStatus, errorThrown) => {
-                resolve({ textStatus, errorThrown });
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
             });
-        });
-        if (response.errorThrown) {
-            console.error(response.errorThrown);
-            return { success: false };
-        }
-        return response.data;
-    }
 
+
+            if (!response.ok) { return { success: false, status: response.status } }
+
+            const responseData = await response.json();
+            return responseData;
+        } catch (error) {
+            console.error(error);
+            return { success: false, error }
+        }
+    }
+    /**
+     * 
+     * @param {string} inputType 
+     * @param {FormField.FormField} FieldClass 
+     */
     assignFieldType(inputType, FieldClass) {
         this.fieldClasses[inputType] = FieldClass;
     }
