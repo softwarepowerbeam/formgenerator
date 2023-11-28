@@ -212,7 +212,7 @@ export class NumberField extends FormField {
             this.label.addClass('powerbeamform-label-required');
         }
         this.input = $('<input>', {
-            id: `${this.prefix}-input-${this.params.name}`,
+            id: `${this.prefix}-input-${this.params.name}-hidden`,
             type: 'hidden'
         }).appendTo(this.div);
         this.assignStandardAttributes(this.input);
@@ -405,7 +405,7 @@ export class CheckboxField extends FormField {
             type: 'checkbox',
             value: '1'
         }).addClass(`powerbeamform-input  ${this.prefix}-input form-check-input`).appendTo(this.div);
-
+        
         this.assignStandardAttributes(this.input);
         if (this.params.attributes) {
             this.input.attr(this.params.attributes);

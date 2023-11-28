@@ -107,6 +107,39 @@ export default class Formgenerator extends EventTarget {
         return data;
     }
 
+    getSyncData() {
+        const formdata = new FormData(this.form[0]);
+        const data = {};
+
+        const fileReaders = [];
+
+        for (const pair of formdata.entries()) {
+            const [key, value] = pair;
+
+            if (value instanceof File) {
+                const reader = new FileReader();
+                fileReaders.push(
+                    new Promise((resolve) => {
+                        reader.onload = function () {
+                            resolve({ key, value: reader.result });
+                        };
+                    })
+                );
+                reader.readAsDataURL(value);
+            } else {
+                if (data[key] === undefined) {
+                    data[key] = value;
+                } else {
+                    if (!Array.isArray(data[key])) {
+                        data[key] = [data[key]];
+                    }
+                    data[key].push(value);
+                }
+            }
+        }
+        return data;
+    }
+
     async countValues() {
         const data = await this.getData();
         let fill = 0;
