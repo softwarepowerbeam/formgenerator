@@ -14,6 +14,7 @@ export class FormField extends EventTarget {
         this.params = fieldParams;
         this.prefix = this.form.prefix;
         this.required = this.params.required;
+        this.value = fieldParams.value;
         if (this.depends) {
             this.form.onFieldChange(this.depends.field, this.isEnabled.bind(this));
         }
@@ -150,16 +151,30 @@ export class FormField extends EventTarget {
         this.addEventListener(eventName, callback)
     }
 
-    _onchange() {
+    setValue(value) {
+        this.value = value;
+        this.userSet = false;
+    }
+
+    _onchange(e = {}) {
+        const autoSet = !!e.autoSet;
+        this.userSet = !autoSet;
         this.changed = true;
-        const changeEvent = new CustomEvent('change', { detail: { field: this.params.name, value: this.getValue() } });
-        changeEvent.data = { field: this.params.name, value: this.getValue() };
+        const lastValue = this.value;
+        const value = this.getValue();
+
+        this.value = value;
+        if (value === lastValue && !autoSet) { return; }
+
+        const changeEvent = new CustomEvent('change', { detail: { field: this.params.name, value, lastValue, autoSet } });
+        changeEvent.data = { field: this.params.name, value, lastValue };
         this.dispatchEvent(changeEvent);
         this.form.dispatchEvent(changeEvent);
 
-        const fieldChangeEvent = new CustomEvent(`${this.params.name}_change`, { detail: { field: this.params.name, value: this.getValue() } });
-        fieldChangeEvent.data = { field: this.params.name, value: this.getValue() };
+        const fieldChangeEvent = new CustomEvent(`${this.params.name}_change`, { detail: { field: this.params.name, value, lastValue, autoSet } });
+        fieldChangeEvent.data = { field: this.params.name, value, lastValue };
         this.form.dispatchEvent(fieldChangeEvent);
+
     }
 
 }
@@ -190,6 +205,7 @@ export class InputField extends FormField {
     }
 
     setValue(value) {
+        super.setValue(value);
         this.input.val(value);
     }
 
@@ -198,24 +214,15 @@ export class InputField extends FormField {
     }
 }
 
-export class NumberField extends FormField {
-    constructor(formgenerator, fieldParams) {
-        super(formgenerator, fieldParams);
+export class NumberSubField extends EventTarget {
+    constructor(fieldParams) {
+        super();
+        this.params = fieldParams;
+        this.value = fieldParams.value || '';
         this.availableUnits = [];
         this.unitOptions = {};
     }
-    generate() {
-        super.generate();
-        this.label = $('<label>', { for: `${this.prefix}-input-${this.params.name}`, html: this.params.label })
-            .addClass(`powerbeamform-label  ${this.prefix}-label form-label`).appendTo(this.div);
-        if (this.params.required) {
-            this.label.addClass('powerbeamform-label-required');
-        }
-        this.input = $('<input>', {
-            id: `${this.prefix}-input-${this.params.name}-hidden`,
-            type: 'hidden'
-        }).appendTo(this.div);
-        this.assignStandardAttributes(this.input);
+    generate(div) {
 
         this.numberInput = $('<input>', {
             id: `${this.prefix}-input-${this.params.name}`,
@@ -234,7 +241,7 @@ export class NumberField extends FormField {
         this.numberInput.on('keydown', this.onkeydown.bind(this));
 
         if (this.params.units) {
-            const subdiv = $('<div>').addClass('powerbeamform-input-units-group').appendTo(this.div);
+            const subdiv = $('<div>').addClass('powerbeamform-input-units-group').appendTo(div);
             this.numberInput.appendTo(subdiv);
             this.availableUnits = this.params.units.split(',');
             if (this.availableUnits.length > 1) {
@@ -249,15 +256,8 @@ export class NumberField extends FormField {
                 subdiv.append(span);
             }
         } else {
-            this.numberInput.appendTo(this.div);
+            this.numberInput.appendTo(div);
         }
-
-        if (this.params.values) {
-            this.setValue(this.params.values)
-        }
-
-        this.input.on('change', this._onchange.bind(this));
-        return this;
     }
 
     findUnit(value, caseInsensitive) {
@@ -273,7 +273,7 @@ export class NumberField extends FormField {
     }
 
     onkeydown(e) {
-        if (!isNaN(e.key) || e.key === '.' || e.key === ',' ) return;
+        if (!isNaN(e.key) || e.key === '.' || e.key === ',') return;
         let unit = this.findUnit(e.key);
         if (!unit) {
             unit = this.findUnit(e.key, true);
@@ -348,12 +348,32 @@ export class NumberField extends FormField {
     }
 
     onvaluechange() {
+        const lastValue = this.value;
+        let value;
         if (this.availableUnits.length > 1) {
-            this.input.val(`${this.numVal} ${this.units}`);
+            value = `${this.numVal} ${this.units}`;
         } else {
-            this.input.val(this.numVal);
+            value = this.numVal;
         }
-        this._onchange();
+
+        const continueDefault = this.dispatchEvent(new CustomEvent('beforechange', {
+            detail: {
+                value: this.value, lastValue
+            },
+            cancelable: true
+        }));
+        if (!continueDefault) { return; }
+
+        this.value = value;
+        this.dispatchEvent(new CustomEvent('change', {
+            detail: {
+                value: this.value, lastValue
+            }
+        }));
+    }
+
+    on(eventType, callback) {
+        return this.addEventListener(eventType, callback);
     }
 
     get numVal() {
@@ -375,22 +395,64 @@ export class NumberField extends FormField {
         return this.unitSelector.val();
     }
 
+    val(value) {
+        if (value) {
+            if (this.availableUnits.length > 1) {
+                const pair = value.toString().split(' ');
+                this.numVal = pair[0];
+                this.units = pair[1];
+                this.value = `${this.numVal} ${this.units}`;
+            } else {
+                this.numVal = value;
+                this.value = this.numVal;
+            }
+        }
+        return this.value;
+    }
+
+}
+
+export class NumberField extends FormField {
+    constructor(formgenerator, fieldParams) {
+        super(formgenerator, fieldParams);
+
+    }
+    generate() {
+        super.generate();
+        this.label = $('<label>', { for: `${this.prefix}-input-${this.params.name}`, html: this.params.label })
+            .addClass(`powerbeamform-label  ${this.prefix}-label form-label`).appendTo(this.div);
+        if (this.params.required) {
+            this.label.addClass('powerbeamform-label-required');
+        }
+        this.input = $('<input>', {
+            id: `${this.prefix}-input-${this.params.name}`,
+            type: 'hidden'
+        }).addClass(`powerbeamform-input ${this.prefix}-input form-control`).appendTo(this.div);
+        this.assignStandardAttributes(this.input);
+
+        this.numberField = new NumberSubField(this.params);
+        this.numberField.generate(this.div);
+        this.numberField.on('change', this.onchange.bind(this));
+        return this;
+    }
+
+    onchange() {
+        this.input.val(this.numberField.val());
+        this._onchange();
+    }
 
     setValue(value = '') {
+        super.setValue(value);
         this.input.val(value);
-        if (this.availableUnits.length > 1) {
-            const pair = value.toString().split(' ');
-            this.numVal = pair[0];
-            this.units = pair[1];
-        } else {
-            this.numVal = value;
-        }
+        this.numberField.val(value);
     }
 
     getValue() {
         return this.input.val();
     }
 }
+
+
 
 export class CheckboxField extends FormField {
     constructor(formgenerator, fieldParams) {
@@ -405,7 +467,7 @@ export class CheckboxField extends FormField {
             type: 'checkbox',
             value: '1'
         }).addClass(`powerbeamform-input  ${this.prefix}-input form-check-input`).appendTo(this.div);
-        
+
         this.assignStandardAttributes(this.input);
         if (this.params.attributes) {
             this.input.attr(this.params.attributes);
@@ -425,6 +487,7 @@ export class CheckboxField extends FormField {
     }
 
     setValue(value) {
+        super.setValue((value) ? '1' : undefined);
         if (value) {
             this.input.prop('checked', true);
         } else {
@@ -481,6 +544,7 @@ export class RadioField extends FormField {
         }
     }
     setValue(value) {
+        super.setValue(value);
         for (const input of this.input) {
             if (input.attr('value') === value) {
                 input.prop('checked', true);
@@ -528,6 +592,7 @@ export class SelectField extends FormField {
     }
 
     setValue(value) {
+        super.setValue(value);
         this.input.val(value);
     }
 
@@ -564,6 +629,7 @@ export class TextareaField extends FormField {
     }
 
     setValue(value) {
+        super.setValue(value);
         this.input.val(value);
     }
 
@@ -586,6 +652,7 @@ export class LabelField extends FormField {
         return this;
     }
     setValue(value) {
+        super.setValue(value);
         this.label.html(value);
     }
 
@@ -614,6 +681,7 @@ export class HiddenField extends FormField {
         return this;
     }
     setValue(value) {
+        super.setValue(value);
         this.input.val(value);
     }
 
