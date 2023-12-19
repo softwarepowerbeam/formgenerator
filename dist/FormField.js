@@ -74,7 +74,7 @@ export class FormField extends EventTarget {
             size: this.params.size,
             maxlength: this.params.maxlength,
             minlength: this.params.minlength,
-            pattern: (this.params.pattern) ? (new RegExp(this.params.pattern, 'g')) : undefined,
+            pattern: (this.params.pattern) ? this.params.pattern : undefined,
         })
 
         element.addClass(this.params.className);
@@ -250,7 +250,7 @@ export class NumberSubField extends EventTarget {
                 for (const unit of this.availableUnits) {
                     this.unitOptions[unit] = $('<option>', { html: unit, value: unit }).appendTo(this.unitSelector);
                 }
-                this.unitSelector.on('change', this.onvaluechange.bind(this));
+                this.unitSelector.on('change', this.onunitschange.bind(this));
             } else {
                 const span = $('<span>').addClass('powerbeamform-units-span').html(this.params.units);
                 subdiv.append(span);
@@ -258,6 +258,15 @@ export class NumberSubField extends EventTarget {
         } else {
             this.numberInput.appendTo(div);
         }
+    }
+
+    onunitschange(e) {
+        const oldUnits = this.lastUnits;
+        const newUnits = this.units;
+
+        this.dispatchEvent(new CustomEvent('unitschange'), detail())
+        this.onvaluechange();
+
     }
 
     findUnit(value, caseInsensitive) {
@@ -370,6 +379,7 @@ export class NumberSubField extends EventTarget {
                 value: this.value, lastValue
             }
         }));
+        this.lastUnits = this.units;
     }
 
     on(eventType, callback) {
@@ -388,6 +398,7 @@ export class NumberSubField extends EventTarget {
         if (value && this.unitOptions[value]) {
             this.unitSelector.children('option').prop('selected', false);
             this.unitOptions[value].prop('selected', true);
+            this.lastUnits = this.units;
         }
     }
 
