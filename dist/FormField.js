@@ -264,7 +264,7 @@ export class NumberSubField extends EventTarget {
         const oldUnits = this.lastUnits;
         const newUnits = this.units;
 
-        this.dispatchEvent(new CustomEvent('unitschange'), detail())
+        this.dispatchEvent(new CustomEvent('unitschange'), { detail: { oldUnits, newUnits } });
         this.onvaluechange();
 
     }
