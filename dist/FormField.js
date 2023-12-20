@@ -250,7 +250,7 @@ export class NumberSubField extends EventTarget {
                 for (const unit of this.availableUnits) {
                     this.unitOptions[unit] = $('<option>', { html: unit, value: unit }).appendTo(this.unitSelector);
                 }
-                this.unitSelector.on('change', this.onunitschange.bind(this));
+                this.unitSelector.on('change', this.onunitchange.bind(this));
             } else {
                 const span = $('<span>').addClass('powerbeamform-units-span').html(this.params.units);
                 subdiv.append(span);
@@ -260,13 +260,12 @@ export class NumberSubField extends EventTarget {
         }
     }
 
-    onunitschange(e) {
-        const oldUnits = this.lastUnits;
-        const newUnits = this.units;
-
-        this.dispatchEvent(new CustomEvent('unitschange'), { detail: { oldUnits, newUnits } });
+    onunitchange() {
+        const oldUnit = this.lastUnits;
+        const newUnit = this.units;
+        const numVal = this.numVal;
+        this.dispatchEvent(new CustomEvent('unitchange', { detail: { oldUnit, newUnit, numVal } }));
         this.onvaluechange();
-
     }
 
     findUnit(value, caseInsensitive) {
@@ -444,7 +443,20 @@ export class NumberField extends FormField {
         this.numberField = new NumberSubField(this.params);
         this.numberField.generate(this.div);
         this.numberField.on('change', this.onchange.bind(this));
+        this.numberField.on('unitchange', this.onunitchange.bind(this));
         return this;
+    }
+
+    onunitchange(e) {
+        const detail = e.detail;
+        detail.field = this;
+        detail.name = this.params.name;
+        const unitchangeEvent = new CustomEvent('unitchange', { detail });
+        this.dispatchEvent(unitchangeEvent);
+        this.form.dispatchEvent(unitchangeEvent);
+
+        const fieldUnitchangeEvent = new CustomEvent(`${this.params.name}_unitchange`, { detail });
+        this.form.dispatchEvent(fieldUnitchangeEvent);
     }
 
     onchange() {
