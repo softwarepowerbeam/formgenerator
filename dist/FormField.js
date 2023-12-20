@@ -531,6 +531,9 @@ export class RadioField extends FormField {
     generate() {
         super.generate();
         this.fieldset = $('<fieldset>', { html: `<legend>${this.params.label}</legend>` }).appendTo(this.div);
+        if (this.params.required) {
+            this.fieldset.find('legend').addClass('powerbeamform-label-required');
+        }
         this.options = [];
         this.input = [];
         this.fillOptions();
