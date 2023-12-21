@@ -89,7 +89,7 @@ export class FormField extends EventTarget {
 
         if (this.params.validator) {
             element.addClass('powerbeamform-validate');
-            element.on('change', this.validate.bind(this));
+            this.on('change', this.validate.bind(this));
         }
 
         if (this.params.confirm) {
@@ -127,6 +127,7 @@ export class FormField extends EventTarget {
         this.input[0].reportValidity();
 
     }
+
     async confirm() {
         if (!this.changed) return;
         const value = this.input.val();
@@ -165,7 +166,7 @@ export class FormField extends EventTarget {
 
         this.value = value;
         if (value === lastValue && !autoSet) { return; }
-
+        
         const changeEvent = new CustomEvent('change', { detail: { field: this.params.name, value, lastValue, autoSet } });
         changeEvent.data = { field: this.params.name, value, lastValue };
         this.dispatchEvent(changeEvent);
